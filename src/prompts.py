@@ -87,4 +87,3 @@ Final Answer: Câu trả lời tiếng Việt ngắn gọn, nêu đề xuất v�
 
 # 🛡️ GUARDRAILS CONFIGURATION (PHANH AN TOÀN)
 MAX_ITERATIONS = 8  # Đủ cho luồng 4 tool, so sánh 3 món và một bước phục hồi lỗi
-TIMEOUT_SECONDS = 10  # Timeout cho mỗi lần gọi tool

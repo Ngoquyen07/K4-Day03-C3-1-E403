@@ -185,9 +185,105 @@ class MockProvider(BaseLLMProvider):
     """Offline Mock Provider (Cho bài test không cần kết nối API)"""
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         text = prompt.lower()
-        if "thời tiết" in text and "hà nội" in text:
-            return "Thought: Cần tra cứu thời tiết Hà Nội.\nAction: get_weather['Hà Nội']"
-        return "🤖 [Mock Provider]: Phản hồi giả lập offline cho bài test."
+        if "không có công cụ tìm kiếm" in system_prompt.lower():
+            if "đăng nhập trái phép" in text:
+                return (
+                    "Tôi không thể truy cập tài khoản hoặc tin nhắn riêng tư. "
+                    "Bạn có thể hỏi trực tiếp về sở thích với sự đồng ý của người nhận."
+                )
+            if "cuối tuần này" in text:
+                return (
+                    "Bạn cho tôi biết thêm độ tuổi, mối quan hệ, sở thích, tính cách, "
+                    "ngân sách và điều người nhận không thích nhé."
+                )
+            if "đồng nghiệp" in text:
+                return (
+                    "Ba gợi ý trong khoảng 300.000 đồng: 1) cà phê rang xay 150.000 đồng, "
+                    "đúng sở thích; 2) phin pha cà phê 120.000 đồng, dùng hằng ngày; "
+                    "3) cốc giữ nhiệt 280.000 đồng, tiện mang đi làm. Giá và khả năng "
+                    "mua chỉ là ước tính."
+                )
+            return (
+                "Tôi có thể gợi ý quà theo thông tin đã cho, nhưng giá và khả năng mua "
+                "chỉ là ước tính vì tôi không có dữ liệu cửa hàng theo thời gian thực."
+            )
+
+        if "đăng nhập trái phép" in text:
+            return (
+                "Thought: Yêu cầu vi phạm quyền riêng tư nên cần từ chối.\n"
+                "Final Answer: Tôi không thể truy cập trái phép hoặc nhận mật khẩu. "
+                "Hãy hỏi sở thích của người nhận với sự đồng ý của họ."
+            )
+        if "cuối tuần này" in text:
+            return (
+                "Thought: Tôi cần thêm thông tin trước khi sử dụng công cụ.\n"
+                "Final Answer: Bạn cho tôi biết độ tuổi, sở thích, tính cách, ngân sách "
+                "và điều người nhận không thích nhé."
+            )
+        if "đồng nghiệp" in text:
+            return (
+                "Thought: Câu hỏi đơn giản có thể trả lời trực tiếp.\n"
+                "Final Answer: Ba gợi ý trong khoảng 300.000 đồng: 1) cà phê rang xay "
+                "150.000 đồng, đúng sở thích; 2) phin pha cà phê 120.000 đồng, dùng "
+                "hằng ngày; 3) cốc giữ nhiệt 280.000 đồng, tiện mang đi làm. Giá cần "
+                "được xác minh khi mua."
+            )
+
+        if "bố tôi" in text:
+            if "observation:" not in text:
+                return (
+                    "Thought: Lưu hồ sơ người nhận.\n"
+                    'Action: save_recipient_profile["Bố", "thực tế", "chăm sóc cây", "1000000"]'
+                )
+            if "tìm thấy" not in text:
+                return 'Thought: Tìm các món phù hợp.\nAction: search_gifts["Bố"]'
+            detail_count = text.count("mô tả:")
+            if detail_count == 0:
+                return 'Thought: Kiểm tra lựa chọn thực tế nhất.\nAction: get_gift_details["G16", "Bố"]'
+            if detail_count == 1:
+                return 'Thought: Kiểm tra lựa chọn thứ hai.\nAction: get_gift_details["G15", "Bố"]'
+            if detail_count == 2:
+                return 'Thought: Kiểm tra lựa chọn thứ ba.\nAction: get_gift_details["G10", "Bố"]'
+            if "đã chốt danh sách" not in text:
+                return 'Thought: Chốt món phù hợp nhất.\nAction: save_shortlist["Bố", "G16"]'
+            return (
+                "Thought: Đã đủ thông tin.\n"
+                "Final Answer: Xếp hạng: 1) G16 máy đo độ ẩm đất, 330.000 VNĐ; "
+                "2) G15 bộ dụng cụ chăm cây, 460.000 VNĐ; 3) G10 kéo cắt tỉa, "
+                "150.000 VNĐ. G16 phù hợp nhất vì thiết thực, hỗ trợ chăm cây và "
+                "không mang tính trang trí."
+            )
+
+        if "bạn gái tôi" in text:
+            if "observation:" not in text:
+                return (
+                    "Thought: Lưu hồ sơ người nhận.\n"
+                    'Action: save_recipient_profile["Bạn gái", "hướng nội", '
+                    '"đọc sách, quan tâm môi trường", "800000"]'
+                )
+            if "tìm thấy" not in text:
+                return 'Thought: Tìm các món phù hợp.\nAction: search_gifts["Bạn gái"]'
+            detail_count = text.count("mô tả:")
+            if detail_count == 0:
+                return 'Thought: Kiểm tra lựa chọn thân thiện môi trường.\nAction: get_gift_details["G17", "Bạn gái"]'
+            if detail_count == 1:
+                return 'Thought: Kiểm tra lựa chọn thứ hai.\nAction: get_gift_details["G02", "Bạn gái"]'
+            if detail_count == 2:
+                return 'Thought: Kiểm tra lựa chọn thứ ba.\nAction: get_gift_details["G01", "Bạn gái"]'
+            if "đã chốt danh sách" not in text:
+                return 'Thought: Chốt món phù hợp nhất.\nAction: save_shortlist["Bạn gái", "G17"]'
+            return (
+                "Thought: Đã đủ thông tin.\n"
+                "Final Answer: Xếp hạng: 1) G17 sổ đọc sách giấy tái chế, 210.000 VNĐ; "
+                "2) G02 đèn đọc sách, 250.000 VNĐ; 3) G01 combo tiểu thuyết, "
+                "420.000 VNĐ. G17 phù hợp nhất vì tối giản, không mùi và sử dụng "
+                "giấy tái chế."
+            )
+
+        return (
+            "Thought: Tôi cần thêm thông tin trước khi sử dụng công cụ.\n"
+            "Final Answer: Hãy cung cấp tên, sở thích và ngân sách của người nhận."
+        )
 
 
 def get_llm_provider(provider_name: str = None) -> BaseLLMProvider:

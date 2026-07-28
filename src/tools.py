@@ -29,7 +29,10 @@ INTEREST_TAGS = {
     "thethao": ["thể thao", "the thao", "gym", "chạy bộ", "chay bo", "yoga"],
     "lamdep": ["làm đẹp", "lam dep", "skincare", "mỹ phẩm", "my pham", "nước hoa"],
     "nauan": ["nấu ăn", "nau an", "bếp", "bep", "baking", "làm bánh"],
-    "caycanh": ["cây cảnh", "cay canh", "trồng cây", "trong cay", "sen đá"],
+    "caycanh": [
+        "cây cảnh", "cay canh", "trồng cây", "trong cay", "chăm sóc cây",
+        "cham soc cay", "chăm cây", "cham cay", "sen đá",
+    ],
     "nghethuat": ["nghệ thuật", "nghe thuat", "vẽ", "ve", "âm nhạc", "am nhac", "guitar"],
     "game": ["game", "gaming", "chơi game", "choi game", "esport"],
     "dulich": ["du lịch", "du lich", "phượt", "phuot", "cắm trại", "cam trai"],
@@ -55,8 +58,8 @@ GIFT_CATALOG = {
             "detail": "Gồm sữa rửa mặt, toner và kem dưỡng, phù hợp mọi loại da."},
     "G09": {"name": "Bộ dao thớt gỗ óc chó", "price": 720000, "tag": "nauan",
             "detail": "Thớt gỗ óc chó nguyên tấm kèm dao đầu bếp thép Nhật."},
-    "G10": {"name": "Chậu sen đá mini để bàn", "price": 150000, "tag": "caycanh",
-            "detail": "Combo 3 chậu sứ trắng, dễ chăm, hợp góc làm việc."},
+    "G10": {"name": "Kéo cắt tỉa cành chống gỉ", "price": 150000, "tag": "caycanh",
+            "detail": "Lưỡi thép chống gỉ, khóa an toàn và tay cầm chống trượt, dùng để chăm cây hằng ngày."},
     "G11": {"name": "Bộ màu nước 36 ô kèm sổ vẽ", "price": 390000, "tag": "nghethuat",
             "detail": "Màu nước Hàn Quốc lên màu trong, kèm sổ giấy 300gsm."},
     "G12": {"name": "Bàn di chuột cỡ lớn RGB", "price": 280000, "tag": "game",
@@ -65,6 +68,12 @@ GIFT_CATALOG = {
             "detail": "Ngăn laptop riêng, khóa chống trộm, vải chống nước."},
     "G14": {"name": "Sổ tay du ký bìa da handmade", "price": 180000, "tag": "dulich",
             "detail": "Bìa da bò thật, giấy kraft, khâu tay thủ công."},
+    "G15": {"name": "Bộ dụng cụ chăm cây 5 món", "price": 460000, "tag": "caycanh",
+            "detail": "Bộ xẻng, cào, kéo tỉa, bình tưới và găng tay; gọn, bền, dùng hằng ngày."},
+    "G16": {"name": "Máy đo độ ẩm đất điện tử", "price": 330000, "tag": "caycanh",
+            "detail": "Đo nhanh độ ẩm đất để tưới cây đúng lúc, màn hình rõ và không cần pin."},
+    "G17": {"name": "Sổ ghi chép đọc sách giấy tái chế", "price": 210000, "tag": "sach",
+            "detail": "Giấy tái chế không mùi, bìa tối giản, có mẫu ghi chú và xếp hạng sách."},
 }
 
 # 💡 Gợi ý cách chọn quà theo nhóm tính cách

@@ -77,7 +77,7 @@ flowchart LR
     C --> P["LLM Provider / System Prompt (src/prompts.py)"]
     C --> X["Parse Action (Thought -> Action)"]
     X --> R["Tool Registry (src/tools.py)"]
-    R --> T["Tool function (get_weather, search_flights...)"]
+    R --> T["Tool function (save_recipient_profile, search_gifts...)"]
     T --> O["Observation (Kết quả thật)"]
     O --> C
     C --> L["Telemetry / Trace Log (docs/trace_eval.md)"]
@@ -121,16 +121,16 @@ Nhận ra chatbot thuần không có grounding dữ liệu thời gian thực, r
 
 ### Hook — Chatbot biết gì thật?
 
-Tưởng tượng hỏi Chatbot tư vấn đặt vé & thời tiết:
+Tưởng tượng hỏi Chatbot chọn quà từ sản phẩm đang bán:
 
-> *"Thời tiết ở Hà Nội hôm nay thế nào và tôi nên chọn chuyến bay nào đi Hà Nội ngày mai?"*
+> *"Bố tôi thích chăm cây. Hãy tìm 3 món quà dưới 1.000.000 đồng, so sánh giá và chọn món phù hợp nhất."*
 
-Tự trả lời: Giá vé đến từ đâu? Thời tiết có chuẩn hôm nay không? Một câu trả lời nghe hợp lý có đồng nghĩa là **grounded** (có bằng chứng thực tế) không?
+Tự trả lời: Sản phẩm và giá đến từ đâu? Một câu trả lời nghe hợp lý có đồng nghĩa là **grounded** (có bằng chứng từ kho quà) không?
 
 | Thành phần                      |   Chatbot có trả lời?   | Có evidence thật từ Tool? | Có thực hiện Action? |
 | :-------------------------------- | :-------------------------: | :--------------------------: | :---------------------: |
-| **Thời tiết thực tế**   |  ❌ (Chỉ bịa/chém gió)  |              ❌              |           ❌           |
-| **Giá vé máy bay thực** | ❌ (Chỉ đưa con số ảo) |              ❌              |           ❌           |
+| **Sản phẩm trong kho quà** | ❌ (Chỉ suy đoán) |              ❌              |           ❌           |
+| **Giá sản phẩm** | ❌ (Chỉ đưa giá ước tính) |              ❌              |           ❌           |
 | **Tư vấn chung**          |             ✅             |              ❌              |           ❌           |
 
 → Chatbot có thể bịa một câu trả lời nghe rất mượt nhưng không có evidence từ database/tool. Đây là lý do ta cần ReAct Agent + Tools.
@@ -181,29 +181,27 @@ Nếu gắn tool chưa test vào Agent rồi Agent chạy sai ➔ Bạn không b
 
 | Field                     | Câu hỏi chuẩn hóa                                                               |
 | :------------------------ | :---------------------------------------------------------------------------------- |
-| **Name**            | Tên duy nhất, rõ nghĩa? (Ví dụ:`get_weather`, `search_flights`)           |
+| **Name**            | Tên duy nhất, rõ nghĩa? (Ví dụ: `save_recipient_profile`, `search_gifts`) |
 | **Purpose**         | Khi nào nên dùng, khi nào không?                                               |
-| **Input schema**    | Field nào required, type gì? (`location: str`, `origin: str`)                 |
+| **Input schema**    | Field nào required, type gì? (`recipient_name: str`, `gift_id: str`)           |
 | **Output schema**   | Trả về gì khi thành công? (Chuỗi JSON hoặc string rõ thông số)            |
-| **Error semantics** | Khi nhập sai địa điểm thì trả về gì? (Trả chuỗi báo lỗi, không crash) |
+| **Error semantics** | Khi thiếu hồ sơ hoặc sai mã quà thì trả về gì? (Trả chuỗi báo lỗi, không crash) |
 | **Side effect**     | Read-only tra cứu hay thay đổi trạng thái?                                     |
 | **Example**         | Input / Output hợp lệ mẫu?                                                       |
 | **Safety**          | Có bắt lỗi crash exception không?                                               |
 
 ### Bạn làm (Role 2 - Tool Engineer):
 
-1. Mở file `src/tools.py` — implement các hàm tool (Ví dụ: `get_weather`, `search_flights` hoặc các tool theo chủ đề tự chọn).
+1. Mở file `src/tools.py` — implement `save_recipient_profile`, `search_gifts`, `get_gift_details` và `save_shortlist`.
 2. Thêm **Docstring / Schema** đầy đủ cho từng hàm.
-3. Bắt lỗi an toàn: Nếu địa điểm không tồn tại ➔ Trả về `"LỖI: Không tìm thấy thông tin..."` thay vì quăng lỗi crash chương trình.
+3. Bắt lỗi an toàn: Nếu chưa có hồ sơ hoặc mã quà không tồn tại ➔ Trả về chuỗi `"LỖI: ..."` thay vì quăng lỗi crash chương trình.
 
 ```python
-# Mẫu tool chuẩn trong src/tools.py
-def get_weather(location: str) -> str:
-    """Tra cứu thời tiết hiện tại của một thành phố."""
-    loc_lower = location.lower()
-    if "hà nội" in loc_lower:
-        return "Thời tiết Hà Nội: 28°C, Nắng nhẹ, Độ ẩm 65%."
-    return f"LỖI: Không tìm thấy dữ liệu thời tiết cho địa điểm '{location}'."
+# Mẫu gọi tool theo đúng luồng trong src/tools.py
+save_recipient_profile("Bố", "thực tế", "chăm sóc cây", "1000000")
+search_gifts("Bố")
+get_gift_details("G16", "Bố")
+save_shortlist("Bố", "G16")
 ```
 
 :::checkpoint{title="Hoàn thành khi"}
@@ -228,18 +226,18 @@ Hiểu vòng lặp ReAct, lắp system prompt ➔ parser ➔ executor ➔ loop. 
 ### Chuỗi Trace mẫu ReAct (`Thought -> Action -> Observation`)
 
 ```text
-Question: Thời tiết Hà Nội hôm nay thế nào và có chuyến bay nào đi Hà Nội ngày mai không?
+Question: Bố tôi thực tế, thích chăm sóc cây. Hãy tìm quà dưới 1.000.000 đồng.
 
-Thought: Cần kiểm tra thời tiết Hà Nội trước.
-Action: get_weather["Hà Nội"]
-Observation: Thời tiết Hà Nội: 28°C, Nắng nhẹ, Độ ẩm 65%.
+Thought: Cần lưu hồ sơ trước khi tìm quà.
+Action: save_recipient_profile["Bố", "thực tế", "chăm sóc cây", "1000000"]
+Observation: Đã lưu hồ sơ của Bố, nhóm sở thích caycanh.
 
-Thought: Tiếp theo cần tra cứu chuyến bay đi Hà Nội ngày mai.
-Action: search_flights["TP.HCM", "Hà Nội"]
-Observation: Chuyến bay VN123 (08:00) - Giá: 1,500,000 VNĐ.
+Thought: Tiếp theo cần tìm các món phù hợp.
+Action: search_gifts["Bố"]
+Observation: Tìm thấy G10, G16 và G15 trong ngân sách.
 
-Thought: Tôi đã có đủ thông tin về thời tiết và chuyến bay.
-Final Answer: Thời tiết Hà Nội hôm nay 28°C nắng nhẹ. Chuyến bay VN123 khởi hành lúc 08:00 với giá 1,500,000 VNĐ.
+Thought: G16 thiết thực nhất và không mang tính trang trí.
+Final Answer: Máy đo độ ẩm đất G16 giá 330.000 VNĐ phù hợp nhất.
 ```
 
 ### State Machine của ReAct Agent Loop
@@ -300,8 +298,8 @@ Phát hiện một failed trace (lỗi lặp vô hạn, gọi sai tên tool, nh�
 
 | Dạng lỗi (Failure Mode) | Biểu hiện thực tế                                      | Cách Agent V2 khắc phục                                                                                        |
 | :------------------------ | :--------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------- |
-| **Unknown Tool**    | AI gọi tool`search_product` không có trong danh sách | Trả về thông báo lỗi dạng:`Tool không tồn tại, các tool hợp lệ gồm: [get_weather, search_flights]` |
-| **Malformed Args**  | AI truyền tham số sai cú pháp`get_weather['Hanoi'`   | Xử lý parser linh hoạt hoặc trả về gợi ý cú pháp đúng                                                 |
+| **Unknown Tool**    | AI gọi tool `search_product` không có trong danh sách | Trả về lỗi kèm các tool hợp lệ trong `AVAILABLE_TOOLS` |
+| **Malformed Args**  | AI truyền sai cú pháp `search_gifts['Bố'` | Parser trả về gợi ý cú pháp đúng |
 | **Repeated Action** | Gọi liên tục 1 tool với cùng tham số                 | Phanh an toàn ngắt khi chạm ngưỡng`MAX_ITERATIONS`                                                         |
 
 ### Bạn làm:
@@ -329,9 +327,9 @@ Chạy bộ Test Cases trên cả Chatbot Baseline và ReAct Agent, hoàn thiệ
 | :---------: | :-------------------------------- | :---------------------------------------- | :---------------------------------------------------------- |
 | **1** | 🟢 Đơn giản (Chỉ lý thuyết) | Hỏi đáp thông thường                | Trả lời ngay, Chatbot có thể nhanh hơn                 |
 | **2** | 🟢 Đơn giản (Chỉ lý thuyết) | Hỏi đáp quy định/chính sách        | Trả lời ngay, không cần gọi tool                       |
-| **3** | 🟡 Multi-step (Cần Tool)         | Đòi hỏi dữ liệu thời gian thực     | Gọi đúng 1 Tool ➔ Trả lời có bằng chứng            |
-| **4** | 🟡 Multi-step (Cần 2 Tools)      | Phụ thuộc nhiều bước                 | Gọi Tool 1 ➔ Gọi Tool 2 ➔ Tổng hợp kết quả          |
-| **5** | 🔴 Edge Case (Câu bẫy)          | Nhập sai địa điểm / tham số vô lý | Tool báo lỗi ➔ Agent ngắt lặp an toàn bằng Guardrail |
+| **3** | 🟡 Multi-step (Cần Tool)         | Tìm và so sánh quà theo hồ sơ     | Lưu hồ sơ ➔ tìm 3 món ➔ kiểm tra và chọn            |
+| **4** | 🟡 Multi-step (Cần nhiều Tool)   | Có nhiều ràng buộc                  | Lọc ngân sách/sở thích ➔ xếp hạng 3 món              |
+| **5** | 🔴 Edge Case (Câu bẫy)          | Yêu cầu xâm phạm quyền riêng tư     | Từ chối, không nhận mật khẩu và không gọi tool       |
 
 ### Rubric đánh giá 0–2 điểm mỗi case
 
