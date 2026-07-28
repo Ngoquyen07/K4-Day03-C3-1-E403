@@ -1,5 +1,5 @@
 """
-🔌 MULTI-PROVIDER LLM ADAPTER (OpenAI, Gemini, Anthropic, OpenRouter & Offline Mock)
+🔌 MULTI-PROVIDER LLM ADAPTER (Groq, OpenAI, Gemini, Anthropic, OpenRouter & Offline Mock)
 Hỗ trợ chuyển đổi linh hoạt giữa các nhà cung cấp AI chỉ bằng cách đổi biến môi trường LLM_PROVIDER.
 """
 
@@ -22,6 +22,47 @@ class BaseLLMProvider:
     """Interface cơ sở cho tất cả các LLM Provider"""
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         raise NotImplementedError
+
+
+class GroqProvider(BaseLLMProvider):
+    """Groq Provider sử dụng API tương thích OpenAI."""
+
+    def __init__(self, api_key: str = None, model: str = None):
+        self.api_key = api_key or os.getenv("GROQ_API_KEY")
+        self.model_name = model or os.getenv("LLM_MODEL") or "llama-3.3-70b-versatile"
+
+    def generate(self, prompt: str, system_prompt: str = "") -> str:
+        if not self.api_key or self.api_key == "your_groq_api_key_here":
+            return "[Groq Error]: Chưa cấu hình GROQ_API_KEY trong file .env!"
+
+        try:
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+
+            response = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": self.model_name,
+                    "messages": messages,
+                },
+                timeout=30,
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+
+            return f"[Groq API Error {response.status_code}]: {response.text}"
+        except requests.RequestException as e:
+            return f"[Groq Connection Error]: {str(e)}"
+        except (KeyError, IndexError, TypeError, ValueError) as e:
+            return f"[Groq Response Error]: Phản hồi API không hợp lệ ({str(e)})"
 
 
 class GeminiProvider(BaseLLMProvider):
@@ -144,7 +185,9 @@ def get_llm_provider(provider_name: str = None) -> BaseLLMProvider:
     """Factory function tự chọn Provider từ biến môi trường LLM_PROVIDER"""
     name = (provider_name or os.getenv("LLM_PROVIDER") or "mock").lower().strip()
     
-    if name == "gemini":
+    if name == "groq":
+        return GroqProvider()
+    elif name == "gemini":
         return GeminiProvider()
     elif name == "openai":
         return OpenAIProvider()
