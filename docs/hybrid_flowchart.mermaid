@@ -1,0 +1,21 @@
+flowchart TD
+    A[Nhận yêu cầu chọn quà] --> B{Vi phạm quyền riêng tư<br/>hoặc yêu cầu dữ liệu đăng nhập?}
+    B -- Có --> C[Từ chối an toàn<br/>không gọi LLM hoặc tool]
+    B -- Không --> D{Đủ quan hệ, sở thích,<br/>tính cách và ngân sách?}
+    D -- Không --> E[Hỏi bổ sung thông tin]
+    D -- Có --> F{Cần tra cứu, so sánh<br/>hoặc chốt quà trong catalog?}
+    F -- Không --> G[Chatbot baseline<br/>một LLM call, không tool]
+    F -- Có --> H[ReAct Agent]
+    H --> I[LLM sinh đúng một bước]
+    I --> J{Final Answer?}
+    J -- Có --> K[Trả lời có bằng chứng]
+    J -- Không --> L{Action hợp lệ<br/>và tool nằm trong registry?}
+    L -- Có --> M[Thực thi tool]
+    M --> N[Chèn đúng một Observation]
+    N --> O{Đủ bằng chứng?}
+    O -- Có --> I
+    O -- Chưa --> P{Còn dưới MAX_ITERATIONS?}
+    P -- Có --> I
+    P -- Không --> Q[Safe fallback]
+    L -- Không --> R[Observation lỗi có hướng dẫn]
+    R --> P

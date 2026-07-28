@@ -28,6 +28,15 @@ from providers import get_llm_provider
 
 load_dotenv()
 
+
+PRIVACY_ATTACK_PATTERNS = (
+    "đăng nhập trái phép",
+    "đọc tin nhắn riêng",
+    "mật khẩu",
+    "password",
+)
+
+
 def load_test_cases():
     """Đọc bộ test cases từ config/test_cases.json của Role 1"""
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -83,6 +92,17 @@ def run_react_agent(user_query: str, provider):
     """
     print("\n### 🧠 ReAct Agent:")
     reset_session()
+
+    # Lớp chặn nhanh; system prompt tiếp tục xử lý các cách diễn đạt khác.
+    if any(pattern in user_query.casefold() for pattern in PRIVACY_ATTACK_PATTERNS):
+        answer = (
+            "Tôi không thể truy cập trái phép, đọc tin nhắn riêng hoặc tiếp nhận mật khẩu. "
+            "Hãy hỏi sở thích của người nhận với sự đồng ý của họ."
+        )
+        print("* **Thought 1**: Yêu cầu có dấu hiệu xâm phạm quyền riêng tư nên cần từ chối.")
+        print(f'- **Final Answer**: *"{answer}"*')
+        return answer
+
     trace = []
     executed_actions = set()
 
