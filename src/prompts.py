@@ -3,6 +3,15 @@
 Nơi cấu hình System Prompt và Phanh An Toàn (Guardrails) cho AI.
 """
 
+# Mốc 1: Failure modes của tool tư vấn tính cách và chọn quà.
+TOOL_FAILURE_MODES = (
+    "Thiếu hoặc sai thông tin về người nhận, dịp tặng và sở thích.",
+    "Ngân sách không hợp lệ hoặc nằm ngoài phạm vi quà có sẵn.",
+    "Thông tin tính cách và sở thích mâu thuẫn, không đủ cơ sở gợi ý.",
+    "Không tìm thấy món quà phù hợp với các tiêu chí đã cung cấp.",
+    "Tool bị timeout, không khả dụng hoặc trả về dữ liệu lỗi/không đầy đủ.",
+)
+
 # Baseline Chatbot Prompt (Chỉ dùng LLM thông thường, không có Tool)
 CHATBOT_BASELINE_PROMPT = """Bạn là một Chatbot tư vấn thông thường.
 Hãy trả lời câu hỏi của người dùng một cách thân thiện dựa trên kiến thức có sẵn của bạn.
