@@ -112,6 +112,13 @@ class OpenAIProvider(BaseLLMProvider):
             )
             return response.choices[0].message.content
         except Exception as e:
+            if e.__class__.__name__ == "AuthenticationError":
+                # Không đưa exception gốc ra console vì có thể chứa một phần
+                # API key hoặc thông tin xác thực nhạy cảm.
+                return (
+                    "[OpenAI Error]: OPENAI_API_KEY không hợp lệ hoặc đã bị thu hồi. "
+                    "Hãy tạo key mới và cập nhật file .env."
+                )
             return f"[OpenAI Exception]: {str(e)}"
 
 

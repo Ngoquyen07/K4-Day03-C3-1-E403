@@ -5,7 +5,10 @@ File chính ghép nối tất cả các thành phần: Tools + Prompts + Test Ca
 
 import json
 import os
+import re
 import sys
+from ast import literal_eval
+from inspect import signature
 from dotenv import load_dotenv
 
 # Đảm bảo import các module cùng thư mục src/ hoạt động mượt mà
@@ -19,7 +22,7 @@ if sys.stdout.encoding != 'utf-8':
         pass
 
 # Import các thành phần từ file của Role 2, Role 3 & Multi-Provider Adapter
-from tools import AVAILABLE_TOOLS
+from tools import AVAILABLE_TOOLS, reset_session
 from prompts import CHATBOT_BASELINE_PROMPT, REACT_SYSTEM_PROMPT, MAX_ITERATIONS
 from providers import get_llm_provider
 
@@ -53,32 +56,130 @@ def run_baseline_chatbot(user_query: str, provider):
     return response
 
 
+def print_react_step(step: int, thought: str, action: str, observation: str):
+    """In đầy đủ một bước Thought -> Action -> Observation theo Markdown."""
+    print(f"* **Thought {step}**: {thought}")
+    print(f"* **Action {step}**: `{action}`")
+
+    observation = str(observation)
+    if "\n" not in observation:
+        print(f"* **Observation {step}**: `{observation}`")
+        return
+
+    print(f"* **Observation {step}**:")
+    print("  ```text")
+    for line in observation.splitlines():
+        print(f"  {line}")
+    print("  ```")
+
+
 def run_react_agent(user_query: str, provider):
     """
-    Dựng vòng lặp ReAct Agent (Thought -> Action -> Observation) có Guardrails.
+    Chạy vòng lặp Thought -> Action -> Observation cho đến Final Answer.
+
+    Mỗi vòng chỉ cho phép một Action, chỉ gọi tool trong registry và đưa
+    Observation thật trở lại ngữ cảnh LLM. Hàm trả về Final Answer hoặc
+    safe fallback khi chạm guardrail.
     """
-    print(f"\n🤖 [REACT AGENT] Câu hỏi: {user_query}")
-    step = 0
-    
-    while step < MAX_ITERATIONS:
-        step += 1
-        print(f"\n--- 🔄 Vòng lặp ReAct (Step {step}/{MAX_ITERATIONS}) ---")
-        
-        if step == 1:
-            print("🧠 Thought: Câu hỏi này cần tra cứu thời tiết thời gian thực.")
-            print("🛠️ Action: get_weather['Hà Nội']")
-            
-            # Thực thi tool
-            obs = get_weather("Hà Nội")
-            print(f"👁️ Observation: {obs}")
-            
-        elif step == 2:
-            print("🧠 Thought: Tôi đã có thông tin thời tiết Hà Nội, giờ tôi có thể tư vấn trang phục.")
-            print("🏁 Final Answer: Thời tiết Hà Nội hôm nay 28°C, nắng nhẹ. Bạn nên mặc áo phông thoáng mát!")
-            break
-            
-    if step >= MAX_ITERATIONS:
-        print(f"🛡️ GUARDRAIL TRIGGERED: Đã đạt giới hạn tối đa {MAX_ITERATIONS} bước. Ngắt lặp an toàn!")
+    print("\n### 🧠 ReAct Agent:")
+    reset_session()
+    trace = []
+    executed_actions = set()
+
+    for step in range(1, MAX_ITERATIONS + 1):
+        context = [f"User Goal: {user_query}"]
+        if trace:
+            context.append("Trace đã được hệ thống xác thực:")
+            context.extend(trace)
+        context.append("Hãy đưa ra đúng một bước tiếp theo theo định dạng bắt buộc.")
+
+        llm_output = provider.generate(
+            "\n\n".join(context),
+            system_prompt=REACT_SYSTEM_PROMPT,
+        ).strip()
+
+        thought_match = re.search(r"^Thought:\s*(.+)$", llm_output, flags=re.MULTILINE)
+        thought = thought_match.group(1).strip() if thought_match else "Phân tích bước tiếp theo."
+
+        if re.match(r"^\[[^\]]+(?:Error|Exception)[^\]]*\]:", llm_output):
+            fallback = "Xin lỗi, dịch vụ LLM đang gặp lỗi nên tôi chưa thể tiếp tục tư vấn."
+            print(f"* **Thought {step}**: Dịch vụ LLM trả về lỗi, cần dừng vòng lặp an toàn.")
+            print(f'- **Final Answer**: *"{fallback}"*')
+            return fallback
+
+        final_match = re.search(
+            r"^Final Answer:\s*(.+)$", llm_output, flags=re.MULTILINE | re.DOTALL
+        )
+        action_lines = re.findall(r"^Action:\s*(.+)$", llm_output, flags=re.MULTILINE)
+        if final_match and not action_lines:
+            final_answer = final_match.group(1).strip()
+            print(f"* **Thought {step}**: {thought}")
+            print(f'- **Final Answer**: *"{final_answer}"*')
+            return final_answer
+
+        if final_match or len(action_lines) != 1:
+            observation = (
+                "LỖI: Phản hồi phải chứa đúng một Action hoặc một Final Answer. "
+                "Hãy sửa đúng định dạng."
+            )
+            print_react_step(
+                step, thought, "Phản hồi không có đúng một Action", observation
+            )
+            trace.extend([llm_output, f"Observation: {observation}"])
+            continue
+
+        action_text = action_lines[0].strip()
+        action_match = re.fullmatch(r"([A-Za-z_]\w*)\s*(\[.*\])", action_text)
+        if not action_match:
+            observation = (
+                "LỖI: Action sai cú pháp. Dùng tên_tool[\"tham số 1\", \"tham số 2\"]."
+            )
+            print_react_step(step, thought, action_text, observation)
+            trace.extend([llm_output, f"Observation: {observation}"])
+            continue
+
+        tool_name, raw_args = action_match.groups()
+        tool = AVAILABLE_TOOLS.get(tool_name)
+        if tool is None:
+            observation = (
+                f"LỖI: Tool '{tool_name}' không tồn tại. Tool hợp lệ: "
+                f"{', '.join(AVAILABLE_TOOLS)}."
+            )
+        else:
+            try:
+                parsed_args = literal_eval(raw_args)
+                if not isinstance(parsed_args, list):
+                    raise ValueError("Danh sách tham số phải đặt trong dấu [].")
+                args = [str(value) for value in parsed_args]
+                signature(tool).bind(*args)
+
+                action_key = (tool_name, tuple(args))
+                if action_key in executed_actions:
+                    observation = (
+                        "LỖI: Action này đã được thực thi trước đó. "
+                        "Không lặp lại cùng tool và tham số."
+                    )
+                else:
+                    executed_actions.add(action_key)
+                    observation = tool(*args)
+            except (SyntaxError, ValueError, TypeError) as exc:
+                observation = f"LỖI: Tham số của {tool_name} không hợp lệ: {exc}"
+            except Exception as exc:
+                observation = f"LỖI: Tool {tool_name} thực thi thất bại: {exc}"
+
+        print_react_step(step, thought, action_text, observation)
+        trace.extend([llm_output, f"Observation: {observation}"])
+
+    fallback = (
+        f"Xin lỗi, tôi chưa thể hoàn tất tư vấn sau {MAX_ITERATIONS} bước. "
+        "Vui lòng bổ sung thông tin hoặc thử lại."
+    )
+    print(
+        f"* **Thought {MAX_ITERATIONS + 1}**: Đã đạt giới hạn tối đa "
+        f"{MAX_ITERATIONS} bước, cần ngắt vòng lặp an toàn."
+    )
+    print(f'- **Final Answer**: *"{fallback}"*')
+    return fallback
 
 
 if __name__ == "__main__":
@@ -101,3 +202,11 @@ if __name__ == "__main__":
         print(f"\n{'=' * 50}")
         print(f"TEST CASE {test_id}/{len(tests)} — {category}")
         run_baseline_chatbot(test_case["question"], provider)
+
+    print("\n--- CHẠY REACT AGENT TRÊN TOÀN BỘ TEST CASE ---")
+    for index, test_case in enumerate(tests, start=1):
+        test_id = test_case.get("id", index)
+        category = test_case.get("category", "Không phân loại")
+        print(f"\n{'=' * 50}")
+        print(f"TEST CASE {test_id}/{len(tests)} — {category}")
+        run_react_agent(test_case["question"], provider)
