@@ -66,9 +66,42 @@ Chúc bạn chọn được món quà ưng ý khiến bố bất ngờ và vui v
 * **Nhận xét**: An toàn nhưng không giải quyết được nhu cầu thực tế của người dùng.
 
 ### 🧠 ReAct Agent:
-* **Thought 1**: Cần tra cứu thời tiết Hà Nội.
-* **Action 1**: `get_weather['Hà Nội']`
-* **Observation 1**: `Thời tiết Hà Nội: 28°C, Nắng nhẹ, Độ ẩm 65%.`
-* **Thought 2**: Đã có thông tin 28°C nắng nhẹ, đưa ra lời khuyên trang phục.
-* **Final Answer**: *"Thời tiết Hà Nội hôm nay 28°C, nắng nhẹ. Bạn nên mặc quần áo thoáng mát!"*
+* *Thought 1*: Tôi sẽ lưu hồ sơ người nhận để chuẩn bị tìm quà tặng phù hợp.
+* *Action 1*: save_recipient_profile["Bạn gái tôi", "Hướng nội", "Đọc sách, quan tâm đến môi trường", "800000"]
+* *Observation 1*: Đã lưu hồ sơ của Bạn gái tôi. Nhóm tính cách: huongnoi. Nhóm sở thích: sach. Ngân sách tối đa: 800,000 VNĐ.
+* *Thought 2*: Tôi sẽ tìm quà tặng phù hợp với hồ sơ đã lưu.
+* *Action 2*: search_gifts["Bạn gái tôi"]
+* *Observation 2*:
+  
+text
+  Tìm thấy 2 món quà phù hợp cho Bạn gái tôi:
+  - [G02] Đèn đọc sách kẹp bàn chống cận - 250,000 VNĐ
+  - [G01] Combo 3 tiểu thuyết bestseller - 420,000 VNĐ
+  
+* *Thought 3*: Tôi sẽ kiểm tra chi tiết của từng món quà để so sánh và xếp hạng.
+* *Action 3*: get_gift_details["G02", "Bạn gái tôi"]
+* *Observation 3*:
+  
+text
+  [G02] Đèn đọc sách kẹp bàn chống cận - 250,000 VNĐ
+  Mô tả: Ánh sáng vàng dịu 3 mức, kẹp được mọi loại bàn, sạc USB-C.
+  Vì sao hợp: đúng nhóm sở thích 'sach' của Bạn gái tôi; nằm trong ngân sách 800,000 VNĐ; người hướng nội thường thích món dùng riêng trong không gian cá nhân, tránh quà phô trương.
+  
+* *Thought 4*: Tôi sẽ kiểm tra chi tiết của món quà thứ hai để so sánh và xếp hạng.
+* *Action 4*: get_gift_details["G01", "Bạn gái tôi"]
+* *Observation 4*:
+  
+text
+  [G01] Combo 3 tiểu thuyết bestseller - 420,000 VNĐ
+  Mô tả: Bộ 3 cuốn tiểu thuyết bán chạy, bìa cứng, kèm bookmark gỗ khắc tên.
+  Vì sao hợp: đúng nhóm sở thích 'sach' của Bạn gái tôi; nằm trong ngân sách 800,000 VNĐ; người hướng nội thường thích món dùng riêng trong không gian cá nhân, tránh quà phô trương.
+  
+* *Thought 5*: Tôi sẽ chốt lại danh sách quà tặng bằng cách lưu tối đa 3 mã quà phù hợp.
+* *Action 5*: save_shortlist["Bạn gái tôi", "G02,G01"]
+* *Observation 5*: Đã chốt danh sách quà cho Bạn gái tôi: G02 (Đèn đọc sách kẹp bàn chống cận), G01 (Combo 3 tiểu thuyết bestseller). Tổng cộng 670,000 VNĐ, còn dư 130,000 VNĐ so với ngân sách.
+* *Thought 6*: Tôi đã hoàn thành việc chốt danh sách quà tặng cho Bạn gái tôi, nhưng chỉ có 2 món. Tôi sẽ hỏi người dùng xem có muốn điều chỉnh ngân sách hoặc sở thích để tìm thêm sản phẩm không.
+* *Action 6*: None
+* *Observation 6*: LỖI: Action sai cú pháp. Dùng tên_tool["tham số 1", "tham số 2"].
+* *Thought 7*: Tôi sẽ hỏi người dùng xem có muốn điều chỉnh ngân sách hoặc sở thích để tìm thêm sản phẩm không.
+- *Final Answer*: "Bạn có muốn điều chỉnh ngân sách hoặc sở thích để tìm thêm món quà phù hợp không?"
 * **Nhận xét**: Hoàn thành xuất sắc nhiệm vụ nhờ sự kết hợp giữa suy luận và công cụ.
