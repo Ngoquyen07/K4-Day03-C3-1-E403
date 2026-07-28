@@ -1,0 +1,11 @@
+flowchart TD
+    A([Câu hỏi người dùng]) --> B{Phân loại câu hỏi}
+
+    B -->|Câu hỏi đơn giản| C[Chatbot path]
+    B -->|Câu hỏi phức tạp| D[ReAct Agent path]
+
+    C --> E[Chatbot xử lý và trả lời trực tiếp]
+    D --> F[ReAct Agent suy luận và sử dụng công cụ]
+
+    E --> G([Phản hồi cho người dùng])
+    F --> G
