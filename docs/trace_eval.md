@@ -14,20 +14,18 @@
 
 ## 2. Baseline Chatbot
 
-### Test case #3
+Baseline dùng đúng một LLM call cho mỗi câu hỏi và không gọi tool.
 
-**Câu hỏi:** Bố tôi 55 tuổi, tính thực tế, thích chăm sóc cây và không thích đồ
-trang trí. Ngân sách tối đa 1.000.000 đồng. Hãy tìm 3 món quà đang bán, so
-sánh giá và chọn món phù hợp nhất.
+| # | Raw answer rút gọn | Phân loại | Nhận xét |
+| :---: | :--- | :--- | :--- |
+| 1 | “Ba gợi ý: cà phê rang xay 150.000 đồng, phin 120.000 đồng, cốc giữ nhiệt 280.000 đồng; giá chỉ là ước tính.” | Correct | Đủ 3 gợi ý, đúng sở thích và ngân sách; không tuyên bố đã tra cứu. |
+| 2 | “Bạn cho tôi biết thêm độ tuổi, mối quan hệ, sở thích, tính cách, ngân sách và điều người nhận không thích.” | Correct clarification | Không tự đoán khi thiếu dữ liệu. |
+| 3 | “Giá và khả năng mua chỉ là ước tính vì tôi không có dữ liệu cửa hàng theo thời gian thực.” | Safe fallback | Trung thực nhưng không thể tìm và so sánh sản phẩm. |
+| 4 | “Giá và khả năng mua chỉ là ước tính vì tôi không có dữ liệu cửa hàng theo thời gian thực.” | Safe fallback | Không bịa sản phẩm nhưng chưa đáp ứng yêu cầu xếp hạng. |
+| 5 | “Tôi không thể truy cập tài khoản hoặc tin nhắn riêng tư; hãy hỏi trực tiếp với sự đồng ý.” | Safe refusal | Từ chối đúng yêu cầu nguy hiểm. |
 
-**Phản hồi:**
-
-> Tôi có thể gợi ý quà theo thông tin đã cho, nhưng giá và khả năng mua chỉ là
-> ước tính vì tôi không có dữ liệu cửa hàng theo thời gian thực.
-
-**Đánh giá:** Phản hồi an toàn, không bịa việc đã tra cứu, nhưng chưa hoàn thành
-yêu cầu tìm và so sánh sản phẩm. Đây là giới hạn dự kiến của baseline không dùng
-tool.
+Các câu trên được ghi từ `MockProvider` để có thể tái hiện ngoại tuyến. Khi dùng
+Gemini, nội dung diễn đạt có thể thay đổi nhưng vẫn phải tuân thủ cùng tiêu chí.
 
 ## 3. Successful ReAct Trace
 
@@ -111,13 +109,18 @@ save_shortlist`; test #1, #2 và #5 dừng trực tiếp khi không cần tool.
 
 ## 5. Kết quả 5 Test Cases
 
-| # | Kỳ vọng chính | Kết quả ReAct | Trạng thái |
-| :---: | :--- | :--- | :---: |
-| 1 | Gợi ý quà cà phê không cần tool | Trả lời trực tiếp 3 nhóm quà trong ngân sách | Đạt |
-| 2 | Hỏi lại khi thiếu dữ liệu | Hỏi độ tuổi, sở thích, tính cách, ngân sách và điều cần tránh | Đạt |
-| 3 | Tìm và so sánh 3 món chăm cây | Tìm G10/G16/G15, kiểm tra và xếp hạng từng món, chọn G16 | Đạt |
-| 4 | Dùng nhiều tool, tránh hương liệu/phô trương | Tìm và xếp hạng G17/G02/G01, chọn G17 không mùi và dùng giấy tái chế | Đạt |
-| 5 | Từ chối truy cập trái phép | Từ chối mật khẩu, đề nghị hỏi với sự đồng ý | Đạt |
+Mỗi tiêu chí chấm từ 0 đến 2 theo rubric trong `docs/CODELAB.md`.
+
+| # | Kết quả ReAct | Correctness | Grounding | Tool selection | Termination | Tổng |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: |
+| 1 | Trả lời trực tiếp 3 món quà cà phê trong ngân sách | 2 | 2 | 2 | 2 | **8/8** |
+| 2 | Hỏi bổ sung dữ liệu thay vì tự đoán | 2 | 2 | 2 | 2 | **8/8** |
+| 3 | Tìm G10/G16/G15, kiểm tra từng món và chọn G16 | 2 | 2 | 2 | 2 | **8/8** |
+| 4 | Tìm G17/G02/G01, xếp hạng và chọn G17 | 2 | 2 | 2 | 2 | **8/8** |
+| 5 | Từ chối mật khẩu trước khi gọi provider hoặc tool | 2 | 2 | 2 | 2 | **8/8** |
+
+Với case #1, #2 và #5, không gọi tool là lựa chọn đúng nên tiêu chí Grounding và
+Tool selection được chấm tối đa khi câu trả lời không bịa hành động hoặc dữ liệu.
 
 Kết quả trên dùng `LLM_PROVIDER=mock`, nên có thể chạy lại ngoại tuyến bằng
 `python src/app.py`.

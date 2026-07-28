@@ -1,73 +1,147 @@
-# 🏫 BÀI LAB 3: CHATBOT VS REACT AGENT - TỪ Ý TƯỞNG ĐẾN THỰC THI
+# LAB 03 E403 - CHATBOT VS REACT AGENT
 
----
+Đề tài 3: **Trợ Lý Nắm Bắt Tính Cách & Chọn Quà Tặng Phù Hợp**
 
-### 💡 1. LỜI NÓI ĐẦU & NỀN TẢNG LÝ THUYẾT (4 CẤP ĐỘ AI HỘI THOẠI)
+Ứng dụng so sánh hai cách xử lý cùng một bộ 5 test case:
 
-Bài Lab giúp bạn hiểu rõ sự tiến hóa qua 4 cấp độ của hệ thống AI:
+- **Chatbot baseline:** một lần gọi LLM, không dùng công cụ.
+- **ReAct Agent:** lặp `Thought -> Action -> Observation`, dùng dữ liệu từ kho
+  quà mô phỏng trước khi trả lời.
 
-| Cấp độ | Loại hệ thống | Đặc điểm chính | Sự xuất hiện trong Bài Lab |
-| :---: | :--- | :--- | :--- |
-| **Cấp 1** | **Rule-Based Bot** | Khớp từ khóa if/else cố định, không có LLM | *Minh họa lịch sử* |
-| **Cấp 2** | **LLM Chatbot** | Dùng LLM sinh text mượt, nhưng không gọi được Tool | **Chatbot Baseline** (Phần thực hành 1) |
-| **Cấp 3** | **Reactive Agent** | Suy luận `Thought -> Action -> Observation` & gọi Tool | **ReAct Agent Loop** (Trọng tâm Bài Lab) |
-| **Cấp 4** | **Autonomous Agent** | Tự rã mục tiêu (Planning), tự đánh giá & có Memory | 🎁 **Phần Bonus Nâng cao (+10%)** |
+## Trạng Thái
 
-* 🤖 **Chatbot thông thường (Cấp 2)**: Giống như một **chuyên gia lý thuyết** — chỉ trả lời dựa trên kiến thức tĩnh có sẵn trong LLM, không thể tra cứu số liệu thực tế hay tự thực hiện thao tác.
-* 🧠 **ReAct Agent (Cấp 3)**: Giống như một **trợ lý thực hành** — vừa biết suy nghĩ (**Thought**), vừa biết chủ động dùng công cụ (**Action**) như phần mềm tra cứu/tính toán, và quan sát kết quả (**Observation**) để giải quyết các bài toán thực tế.
+| Mốc | Nội dung | Trạng thái |
+| :--- | :--- | :---: |
+| 1 | Chọn đề tài và đánh giá Agentic Fit | Hoàn thành |
+| 2 | Baseline Chatbot, Tool Specs và 5 test case | Hoàn thành |
+| 3 | ReAct loop, parser, guardrails và trace | Hoàn thành |
+| 4 | Cross-Audit nội bộ và Hybrid Flowchart | Hoàn thành kỹ thuật |
 
----
+Cross-Audit với nhóm khác và nộp link repository là hoạt động trực tiếp, không
+được giả lập hoặc đánh dấu thay trong mã nguồn.
 
-### 📂 2. CẤU TRÚC THƯ MỤC DỰ ÁN
+## Cài Đặt
 
-```text
-📁 Day-3-Lab-Chatbot-vs-react-agent-E402/
-├── 📄 README.md                 <-- 📘 Tổng quan bài Lab & Thang điểm
-├── 📄 .env.example              <-- 🔑 File mẫu API Key
-├── 📄 requirements.txt          <-- 📦 Thư viện cần cài đặt
-│
-├── 📁 config/                   <-- 🛠️ CẤU HÌNH & DỮ LIỆU
-│   └── 📄 test_cases.json       <-- 🟢 [Role 1] Bộ đề 5 Test Cases thử thách AI
-│
-├── 📁 src/                      <-- 💻 MÃ NGUỒN PYTHON (BOILERPLATE)
-│   ├── 📄 tools.py              <-- 🛠️ [Role 2] Khai báo các công cụ (Tools)
-│   ├── 📄 prompts.py            <-- 🧠 [Role 3] ReAct System Prompt & Guardrails
-│   └── 📄 app.py                <-- 🚀 [Role 4] Core App ghép nối & chạy ReAct Loop
-│
-└── 📁 docs/                     <-- 📚 TÀI LIỆU HƯỚNG DẪN & BÁO CÁO
-    ├── 📄 CODELAB.md            <-- 🎓 [LMS Format] Hướng dẫn thực hành từng bước Codelab
-    ├── 📄 PHAN_CONG_CONG_VIEC.md <-- 📋 [BẮT ĐẦU TẠI ĐÂY] Sổ tay thực hành & Checklist 5 Roles
-    ├── 📄 DANH_SACH_DE_TAI.md    <-- 💡 Danh sách 10 chủ đề gợi ý
-    └── 📄 trace_eval.md          <-- 📊 [Role 5] Báo cáo Log Trace & Đánh giá Agentic Fit
+Yêu cầu Python 3.10 trở lên.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
 ```
 
----
+Mặc định ứng dụng dùng `LLM_PROVIDER=mock`, chạy ngoại tuyến và không cần API
+key. Để dùng Gemini, chỉnh `.env` cục bộ:
 
-### ⏱️ 3. LỘ TRÌNH THỰC HÀNH (4 MỐC / 150 PHÚT)
+```dotenv
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=<api-key-cua-ban>
+LLM_MODEL=<model-id-duoc-tai-khoan-ho-tro>
+```
+
+Không commit `.env` hoặc API key.
+
+## Chạy Dự Án
+
+```powershell
+python src/app.py
+```
+
+Ứng dụng chạy Chatbot baseline và ReAct Agent trên 5 câu hỏi trong
+`config/test_cases.json`.
+
+Chạy kiểm tra:
+
+```powershell
+python -m unittest discover -s tests -v
+python src/tools.py
+python -m pip check
+```
+
+Kết quả hiện tại:
+
+- 5/5 test nghiệp vụ pass.
+- 6/6 tình huống Cross-Audit nội bộ pass.
+- Tool xử lý input lỗi bằng Observation/chuỗi `LỖI`, không làm ứng dụng crash.
+
+## Kiến Trúc
 
 ```mermaid
-timeline
-    title ⏱️ KỊCH BẢN THỰC HÀNH LAB 3 (Tổng thời lượng: 150 phút)
-    Mốc 1 (20 phút) : Định hình & Đánh giá Agentic Fit : Chọn bài toán & Lập bảng chấm điểm Scoring Matrix
-    Mốc 2 (30 phút) : Baseline Chatbot & Khai báo Tool : Dựng Chatbot gốc & Viết Tool Specs + 5 Test Cases
-    Mốc 3 (60 phút) : ReAct Loop & Safeguards : Viết Prompt, lắp Agent, cài Phanh Guardrails & Chạy Test
-    Mốc 4 (40 phút) : Tương tác liên nhóm & Hybrid Pattern : Cross-Audit (Tấn công/Phòng thủ) & Vẽ Flowchart
+flowchart LR
+    U[User query] --> B[Baseline Chatbot]
+    U --> A[ReAct Agent]
+    B --> P[LLM Provider]
+    A --> P
+    A --> R[Action parser và Tool Registry]
+    R --> T[Gift tools]
+    T --> O[Observation]
+    O --> A
+    A --> F[Final Answer hoặc Safe Fallback]
 ```
 
----
+ReAct Agent chỉ dispatch tool có trong `AVAILABLE_TOOLS`:
 
-### 💯 4. CƠ CHẾ CHẤM ĐIỂM  (SCORING RUBRIC)
+1. `save_recipient_profile`
+2. `search_gifts`
+3. `get_gift_details`
+4. `save_shortlist`
 
-| Tiêu chí                                |  Trọng số  | Mô tả chi tiết                                                                                                             | Bằng chứng kiểm tra (Artifacts)                                        |
-| :---------------------------------------- | :-----------: | :---------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------ |
-| **1. Agentic Fit & Test Design**    | **20%** | Phân tích đúng 4 tiêu chí Agentic Fit cho chủ đề tự chọn. Bộ test cases đủ góc cạnh (đơn giản, multi-step, edge cases). | Bảng chấm điểm (`docs/trace_eval.md`) + `config/test_cases.json`. |
-| **2. ReAct Implementation & Tools** | **30%** | Tool description rõ ràng. Vòng lặp ReAct chạy đúng chuẩn `Thought -> Action -> Observation`.                         | Code trong `src/tools.py` + `src/app.py`.                              |
-| **3. Guardrails & Observability**   | **20%** | Bắt được lỗi loop, có max iterations (Guardrail). Trích xuất được ít nhất 1 Trace log hoàn chỉnh.                     | File `src/prompts.py` + Log trong `docs/trace_eval.md`.                |
-| **4. Inter-group Attack & Defense** | **20%** | Phản biện tốt khi gọi ngẫu nhiên hoặc cử 1 bạn đi chấm chéo (+10đ). Agent chống đỡ tốt / fallback chuẩn (+10đ).        | Biên bản Cross-Audit / Trả lời phản biện.                             |
-| **5. Hybrid Decision Flowchart**    | **10%** | Sơ đồ thể hiện rõ khi nào đi Chatbot path, khi nào đi ReAct Agent path.                                             | Sơ đồ Flowchart (`docs/hybrid_flowchart.mermaid`).                   |
-| 🎁 **BONUS: Autonomous Agent**     | **+10%**| Thử nghiệm tính năng Planning (tự chia nhỏ mục tiêu) hoặc Memory cho Agent (Cấp 4).                                  | Demo code trong `src/app.py` hoặc giải trình trong report.           |
+Luồng multi-step chuẩn:
 
----
+```text
+save_recipient_profile
+  -> search_gifts
+  -> get_gift_details
+  -> save_shortlist
+  -> Final Answer
+```
 
-> 🚀 **BẮT ĐẦU LÀM BÀI**:
-> Vui lòng mở sổ tay thực hành 👉 **[PHAN_CONG_CONG_VIEC.md](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/docs/PHAN_CONG_CONG_VIEC.md)** để xem phân vai và checklist công việc cụ thể cho từng thành viên!
+## Guardrails
+
+- Giới hạn vòng lặp bằng `MAX_ITERATIONS`.
+- Parse tham số bằng `literal_eval`, không dùng `eval`.
+- Chỉ gọi tool trong `AVAILABLE_TOOLS`.
+- Chặn Action lặp với cùng tham số.
+- Kiểm tra ngân sách, mã quà, sở thích và prompt injection tại tầng tool.
+- Từ chối yêu cầu mật khẩu hoặc truy cập dữ liệu riêng tư trước khi gọi provider.
+- Trả safe fallback khi LLM lỗi hoặc hết số bước.
+
+## Dữ Liệu Và Giới Hạn
+
+Kho quà trong `src/tools.py` là dữ liệu mô phỏng, không phải tồn kho hoặc giá
+thời gian thực. Baseline phải nói rõ giới hạn này. Agent chỉ được khẳng định dữ
+liệu mà tool đã trả về.
+
+Hồ sơ và shortlist chỉ lưu trong bộ nhớ của phiên chạy; dự án không lưu dữ liệu
+người dùng lâu dài.
+
+## Cấu Trúc Chính
+
+```text
+.
+├── config/
+│   └── test_cases.json
+├── docs/
+│   ├── CODELAB.md
+│   ├── DANH_SACH_DE_TAI.md
+│   ├── PHAN_CONG_CONG_VIEC.md
+│   ├── hybrid_flowchart.mermaid
+│   └── trace_eval.md
+├── src/
+│   ├── app.py
+│   ├── prompts.py
+│   ├── providers.py
+│   └── tools.py
+├── tests/
+│   └── test_milestones.py
+├── .env.example
+└── requirements.txt
+```
+
+## Tài Liệu
+
+- [Hướng dẫn thực hành](docs/CODELAB.md)
+- [Phân công và checklist 4 mốc](docs/PHAN_CONG_CONG_VIEC.md)
+- [Báo cáo trace và đánh giá](docs/trace_eval.md)
+- [Hybrid Decision Flowchart](docs/hybrid_flowchart.mermaid)

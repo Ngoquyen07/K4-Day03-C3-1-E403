@@ -1,9 +1,9 @@
 ---
-id: "day3-lab-chatbot-vs-react-agent-e402"
-title: "Lab 03 — Chatbot vs ReAct Agent (Phòng E402)"
+id: "day3-lab-chatbot-vs-react-agent-e403"
+title: "Lab 03 — Chatbot vs ReAct Agent (Phòng E403)"
 duration: 240
 author: "VinUni AI Codelab × GDGoC"
-updated: "2026-07-27"
+updated: "2026-07-28"
 category: "AI Agent"
 description: "Xây dựng Chatbot baseline, thiết kế Tool Specs, lắp ReAct Agent Loop với Guardrails và đánh giá so sánh trên bộ 5 Test Cases thực tế ."
 published: true
@@ -23,7 +23,7 @@ requiresSubmission: true
 
 **AI Agent · Day 3 · ~240 phút****VinUni AI Codelab × GDGoC · Cập nhật 2026-07-27**
 
-> **240 phút · Day 3 · intermediate.** Bạn sẽ xây một chatbot baseline, thiết kế tool contract, lắp [ReAct Agent](#glossary "Reasoning + Acting — kiến trúc agent luân phiên suy nghĩ (Thought), hành động (Action) và nhận kết quả (Observation) cho đến khi đủ bằng chứng trả lời.") và so sánh hai hệ thống trên cùng bộ test case thực tế tại phòng E402. Phần lớn bài chạy [deterministic](#glossary "Cùng input + cùng data luôn ra cùng output — không phụ thuộc model hay mạng.") — chưa cần API key phức tạp ngay từ đầu.
+> **240 phút · Day 3 · intermediate.** Bạn sẽ xây một chatbot baseline, thiết kế tool contract, lắp [ReAct Agent](#glossary "Reasoning + Acting — kiến trúc agent luân phiên suy nghĩ (Thought), hành động (Action) và nhận kết quả (Observation) cho đến khi đủ bằng chứng trả lời.") và so sánh hai hệ thống trên cùng bộ test case thực tế tại phòng E403. Phần lớn bài chạy [deterministic](#glossary "Cùng input + cùng data luôn ra cùng output — không phụ thuộc model hay mạng.") — chưa cần API key phức tạp ngay từ đầu.
 
 Câu hỏi trọng tâm xuyên suốt Lab:
 
@@ -43,17 +43,17 @@ Câu hỏi trọng tâm xuyên suốt Lab:
 ## 1. Setup và hiểu kiến trúc
 
 :::goal{title="Repo chạy, kiến trúc rõ"}
-Bạn có repo `Day-3-Lab-Chatbot-vs-react-agent-E402` trên máy, môi trường sẵn sàng, hiểu vai trò từng thành phần và phân vai nhóm 5-6 người.
+Bạn có repo `K4-Day03-C3-1-E403` trên máy, môi trường sẵn sàng, hiểu vai trò từng thành phần và phân vai nhóm 5-6 người.
 :::
 
 ### Fork, clone, cài môi trường
 
-Mở repo `Day-3-Lab-Chatbot-vs-react-agent-E402`, bấm **Fork** rồi clone về máy theo hướng dẫn.
+Mở repo `K4-Day03-C3-1-E403`, bấm **Fork** rồi clone về máy theo hướng dẫn.
 
 Cài môi trường:
 
 ```bash
-cd Day-3-Lab-Chatbot-vs-react-agent-E402
+cd K4-Day03-C3-1-E403
 python -m venv .venv
 source .venv/bin/activate        # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
@@ -69,7 +69,7 @@ python src/app.py
 
 ### Kiến trúc — biết trước khi code
 
-Mở [README.md](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/README.md) và [docs/PHAN_CONG_CONG_VIEC.md](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/docs/PHAN_CONG_CONG_VIEC.md). Đọc sơ đồ bên dưới — nhóm bạn sẽ xây từng phần:
+Mở [README.md](../README.md) và [docs/PHAN_CONG_CONG_VIEC.md](PHAN_CONG_CONG_VIEC.md). Đọc sơ đồ bên dưới — nhóm bạn sẽ xây từng phần:
 
 ```mermaid
 flowchart LR
@@ -94,7 +94,7 @@ flowchart LR
 | **Observability**    | Ghi log trace để debug và làm báo cáo so sánh                 | `docs/trace_eval.md` (Role 5)      |
 
 :::checkpoint{title="Hoàn thành khi"}
-[ ] Terminal hiển thị `(.venv)`, gõ `python src/app.py` chạy thành công không báo lỗi.
+[X] Terminal hiển thị `(.venv)`, gõ `python src/app.py` chạy thành công không báo lỗi.
 [ ] Bạn giải thích được vai trò Provider, Agent, Tool, Observation và Telemetry.
 [ ] Cả nhóm đã thống nhất phân vai 5-6 thành viên theo file `docs/PHAN_CONG_CONG_VIEC.md`.
 :::
@@ -156,8 +156,8 @@ Câu hỏi của bài Lab: Khi nào chi phí orchestration của Agent đáng gi
 :::
 
 :::checkpoint{title="Hoàn thành khi"}
-[ ] Chatbot dùng đúng 1 LLM call, số lần gọi tool = 0.
-[ ] Raw answer đã được Role 5 lưu vào `docs/trace_eval.md` và phân loại output từng case.
+[X] Chatbot dùng đúng 1 LLM call, số lần gọi tool = 0.
+[X] Raw answer đã được Role 5 lưu vào `docs/trace_eval.md` và phân loại output từng case.
 :::
 
 :::caution{title="Troubleshooting — Vấn đề thường gặp"}
@@ -205,9 +205,9 @@ save_shortlist("Bố", "G16")
 ```
 
 :::checkpoint{title="Hoàn thành khi"}
-[ ] Các tool trong `src/tools.py` chạy thử độc lập pass 100%, không crash khi nhập sai tham số.
-[ ] Mỗi tool có docstring mô tả input/output/error contract rõ ràng.
-[ ] Đã đăng ký danh sách tool vào dictionary `AVAILABLE_TOOLS`.
+[X] Các tool trong `src/tools.py` chạy thử độc lập pass 100%, không crash khi nhập sai tham số.
+[X] Mỗi tool có docstring mô tả input/output/error contract rõ ràng.
+[X] Đã đăng ký danh sách tool vào dictionary `AVAILABLE_TOOLS`.
 :::
 
 :::caution{title="Troubleshooting — Vấn đề thường gặp"}
@@ -270,10 +270,10 @@ stateDiagram-v2
 3. **Role 5**: Chạy `python src/app.py` và dán chuỗi log trace vào `docs/trace_eval.md`.
 
 :::checkpoint{title="Hoàn thành khi"}
-[ ] Agent chạy qua đúng chuỗi `Thought -> Action -> Observation`.
-[ ] Observation của bước trước xuất hiện trong prompt suy luận của bước sau.
-[ ] Phanh Guardrail `MAX_ITERATIONS` hoạt động ngắt lặp an toàn khi gặp câu bẫy.
-[ ] Đã lưu log trace vào `docs/trace_eval.md`.
+[X] Agent chạy qua đúng chuỗi `Thought -> Action -> Observation`.
+[X] Observation của bước trước xuất hiện trong prompt suy luận của bước sau.
+[X] Phanh Guardrail `MAX_ITERATIONS` hoạt động ngắt lặp an toàn khi gặp câu bẫy.
+[X] Đã lưu log trace vào `docs/trace_eval.md`.
 :::
 
 :::caution{title="Troubleshooting — Vấn đề thường gặp"}
@@ -309,8 +309,8 @@ Phát hiện một failed trace (lỗi lặp vô hạn, gọi sai tên tool, nh�
 3. **Role 5**: Ghi lại so sánh Before/After vào `docs/trace_eval.md`.
 
 :::checkpoint{title="Hoàn thành khi"}
-[ ] Có ít nhất 1 Failed Trace được phân tích nguyên nhân gốc trong `docs/trace_eval.md`.
-[ ] Agent V2 không bị crash khi gặp câu bẫy, trả về câu thông báo lịch sự khi chạm giới hạn.
+[X] Có ít nhất 1 Failed Trace được phân tích nguyên nhân gốc trong `docs/trace_eval.md`.
+[X] Agent V2 không bị crash khi gặp câu bẫy, trả về câu thông báo lịch sự khi chạm giới hạn.
 :::
 
 ---
@@ -325,8 +325,8 @@ Chạy bộ Test Cases trên cả Chatbot Baseline và ReAct Agent, hoàn thiệ
 
 |      #      | Loại câu hỏi                   | Mục đích kiểm tra                     | Kỳ vọng ở Agent                                          |
 | :---------: | :-------------------------------- | :---------------------------------------- | :---------------------------------------------------------- |
-| **1** | 🟢 Đơn giản (Chỉ lý thuyết) | Hỏi đáp thông thường                | Trả lời ngay, Chatbot có thể nhanh hơn                 |
-| **2** | 🟢 Đơn giản (Chỉ lý thuyết) | Hỏi đáp quy định/chính sách        | Trả lời ngay, không cần gọi tool                       |
+| **1** | 🟢 Đơn giản (Đủ thông tin) | Gợi ý quà cà phê trong ngân sách     | Trả lời ngay, không cần gọi tool                       |
+| **2** | 🟢 Đơn giản (Thiếu thông tin) | Kiểm tra khả năng hỏi lại           | Hỏi bổ sung, không tự đoán và không gọi tool           |
 | **3** | 🟡 Multi-step (Cần Tool)         | Tìm và so sánh quà theo hồ sơ     | Lưu hồ sơ ➔ tìm 3 món ➔ kiểm tra và chọn            |
 | **4** | 🟡 Multi-step (Cần nhiều Tool)   | Có nhiều ràng buộc                  | Lọc ngân sách/sở thích ➔ xếp hạng 3 món              |
 | **5** | 🔴 Edge Case (Câu bẫy)          | Yêu cầu xâm phạm quyền riêng tư     | Từ chối, không nhận mật khẩu và không gọi tool       |
@@ -346,7 +346,7 @@ Chạy bộ Test Cases trên cả Chatbot Baseline và ReAct Agent, hoàn thiệ
 2. **Đẩy code lên GitHub**:
    ```bash
    git add .
-   git commit -m "Hoan thanh Lab 03: Chatbot vs ReAct Agent E402"
+   git commit -m "Hoan thanh Lab 03: Chatbot vs ReAct Agent E403"
    git push origin main
    ```
 3. **Nộp link Repository**: Gửi link repo GitHub cho Giảng viên/Coach kiểm tra.
@@ -355,14 +355,15 @@ Chạy bộ Test Cases trên cả Chatbot Baseline và ReAct Agent, hoàn thiệ
 
 ### 📋 CHECKLIST ARTIFACTS BẮT BUỘC KHI NỘP BÀI
 
-- [X] 📘 [README.md](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/README.md) — Tổng quan kiến trúc & Rubric chấm điểm.
-- [X] 📋 [docs/PHAN_CONG_CONG_VIEC.md](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/docs/PHAN_CONG_CONG_VIEC.md) — Sổ tay phân công 5 Roles & Checklist theo mốc.
-- [X] 💡 [docs/DANH_SACH_DE_TAI.md](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/docs/DANH_SACH_DE_TAI.md) — Danh sách 10 chủ đề gợi ý.
-- [X] 📊 [docs/trace_eval.md](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/docs/trace_eval.md) — Báo cáo Log Trace & Bảng đánh giá Scoring Matrix.
-- [X] 🟢 [config/test_cases.json](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/config/test_cases.json) — Bộ đề Test Cases.
-- [X] 🛠️ [src/tools.py](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/src/tools.py) — Khai báo các công cụ (Role 2).
-- [X] 🧠 [src/prompts.py](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/src/prompts.py) — System Prompt ReAct & Guardrails (Role 3).
-- [X] 🚀 [src/app.py](file:///c:/Users/Admin/Documents/VinUni/LabCoachVin/LabKeyCoach/Day-3-Lab-Chatbot-vs-react-agent-E402/src/app.py) — Core App ghép nối vòng lặp ReAct (Role 4).
+- [X] 📘 [README.md](../README.md) — Tổng quan, setup, kiến trúc, cách chạy và giới hạn hệ thống.
+- [X] 📋 [docs/PHAN_CONG_CONG_VIEC.md](PHAN_CONG_CONG_VIEC.md) — Sổ tay phân công 5 Roles & Checklist theo mốc.
+- [X] 💡 [docs/DANH_SACH_DE_TAI.md](DANH_SACH_DE_TAI.md) — Danh sách 10 chủ đề gợi ý.
+- [X] 📊 [docs/trace_eval.md](trace_eval.md) — Baseline 5 case, ReAct trace, RCA và rubric định lượng.
+- [X] 📈 [docs/hybrid_flowchart.mermaid](hybrid_flowchart.mermaid) — Sơ đồ phân luồng Chatbot/ReAct và guardrails.
+- [X] 🟢 [config/test_cases.json](../config/test_cases.json) — Bộ đề Test Cases.
+- [X] 🛠️ [src/tools.py](../src/tools.py) — Khai báo các công cụ (Role 2).
+- [X] 🧠 [src/prompts.py](../src/prompts.py) — System Prompt ReAct & Guardrails (Role 3).
+- [X] 🚀 [src/app.py](../src/app.py) — Core App ghép nối vòng lặp ReAct (Role 4).
 
 ---
 
